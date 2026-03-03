@@ -6,58 +6,306 @@
 <title>Scyfarms</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
-<!--
-  The Parse initialization keys below are public in this prototype. In a real
-  deployment you would retrieve them from a secure server or environment
-  variable, not hard-code them into the client.
--->
 
 <style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
   body {
-    background-color: #fffdfd;
-    color: #111;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
   }
 
-  body.dark-mode {
-    background-color: #181818;
-    color: #e5e5e5;
+  .container {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 600px;
+    width: 100%;
+    overflow: hidden;
   }
 
-  body.dark-mode nav {
-    background-color: #202020;
+  .hero {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 60px 40px;
+    text-align: center;
   }
 
-  body.dark-mode .card {
-    background-color: #242424;
+  .hero h1 {
+    font-size: 2.5em;
+    margin-bottom: 15px;
+    font-weight: 700;
   }
 
-  body.dark-mode input,
-  body.dark-mode textarea {
-    background-color: #2a2a2a;
-    color: #e5e5e5;
-    border-color: #444;
+  .hero p {
+    font-size: 1.1em;
+    margin-bottom: 30px;
+    opacity: 0.95;
   }
 
-  body.dark-mode ::placeholder {
-    color: #aaa;
+  .btn-primary {
+    background: #ffd700;
+    color: #333;
+    border: none;
+    padding: 14px 28px;
+    font-size: 1.05em;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  }
+
+  .content {
+    padding: 40px;
+  }
+
+  .footer-text {
+    text-align: center;
+    color: #666;
+    font-size: 0.95em;
+    margin-top: 20px;
+  }
+
+  .edit-section {
+    background: #f5f5f5;
+    border-radius: 15px;
+    padding: 25px;
+    margin-top: 20px;
+    display: none;
+  }
+
+  .edit-section.show {
+    display: block;
+  }
+
+  .form-group {
+    margin-bottom: 15px;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+  }
+
+  .form-group input,
+  .form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.95em;
+    font-family: inherit;
+  }
+
+  .form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  .form-group input:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+  }
+
+  .btn-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .btn-save, .btn-cancel {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .btn-save {
+    background: #667eea;
+    color: white;
+  }
+
+  .btn-save:hover {
+    background: #5568d3;
+  }
+
+  .btn-cancel {
+    background: #ddd;
+    color: #333;
+  }
+
+  .btn-cancel:hover {
+    background: #ccc;
+  }
+
+  .btn-edit {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+    margin-top: 20px;
+  }
+
+  .btn-edit:hover {
+    background: #5568d3;
   }
 </style>
 </head>
 
-<body class="font-comic sans">
+<body class="font-sans">
 
-<!-- Simple landing page with Google Doc link -->
-<div class="w-full bg-blue-200 p-8 text-center">
-  <h1 class="text-3xl font-bold mb-4">Welcome to Scyfarms</h1>
-  <p class="mb-4">This site serves as a landing page for our project. Click the link below to open the shared document with all details.</p>
-  <a href="https://docs.google.com" target="_blank" class="bg-blue-500 text-white px-6 py-3 rounded text-lg">Open Google Doc</a>
-  <p class="text-sm mt-6">You may be coming from a Google Site; feel free to bookmark this page or return to it anytime.</p>
+<div class="container">
+  <!-- Public View -->
+  <div id="publicView" class="show">
+    <div class="hero">
+      <h1 id="displayTitle">Welcome to Scyfarms</h1>
+      <p id="displayDesc">This site serves as a landing page for our project. Click the link below to open the shared document with all details.</p>
+      <a id="docLink" href="https://docs.google.com" target="_blank" class="btn-primary">Open Google Doc</a>
+    </div>
+
+    <div class="content">
+      <p class="footer-text">You may be coming from a Google Site; feel free to bookmark this page or return to it anytime.</p>
+      <button class="btn-edit" onclick="toggleEdit()">🔧 Edit (Admin Only)</button>
+    </div>
+  </div>
+
+  <!-- Editor View (Password Protected) -->
+  <div id="editView" class="edit-section">
+    <div class="content">
+      <h2 style="margin-bottom: 20px; color: #333;">🔐 Admin Editor</h2>
+      
+      <div id="passwordPrompt">
+        <div class="form-group">
+          <label>Enter Password:</label>
+          <input type="password" id="adminPassword" placeholder="Enter admin password" />
+        </div>
+        <button class="btn-save" onclick="checkPassword()" style="width: 100%;">Unlock</button>
+        <button class="btn-cancel" onclick="toggleEdit()" style="width: 100%; margin-top: 10px;">Cancel</button>
+      </div>
+
+      <div id="editorForm" style="display: none;">
+        <div class="form-group">
+          <label>Page Title:</label>
+          <input type="text" id="editTitle" placeholder="Enter page title" />
+        </div>
+
+        <div class="form-group">
+          <label>Description:</label>
+          <textarea id="editDesc" placeholder="Enter page description"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Google Doc Link:</label>
+          <input type="text" id="editLink" placeholder="https://docs.google.com/..." />
+        </div>
+
+        <div class="btn-group">
+          <button class="btn-save" onclick="saveChanges()">Save Changes</button>
+          <button class="btn-cancel" onclick="closeEditor()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
+<script>
+// Simple password (change this to something secure)
+const ADMIN_PASSWORD = "admin123";
 
+// Load saved data from browser storage
+function loadSavedData() {
+  const saved = localStorage.getItem("scyfarmsData");
+  if (saved) {
+    const data = JSON.parse(saved);
+    document.getElementById("displayTitle").textContent = data.title;
+    document.getElementById("displayDesc").textContent = data.desc;
+    document.getElementById("docLink").href = data.link;
+  }
+}
 
+function toggleEdit() {
+  const editView = document.getElementById("editView");
+  editView.classList.toggle("show");
+  
+  if (editView.classList.contains("show")) {
+    // Load current values into form
+    document.getElementById("editTitle").value = document.getElementById("displayTitle").textContent;
+    document.getElementById("editDesc").value = document.getElementById("displayDesc").textContent;
+    document.getElementById("editLink").value = document.getElementById("docLink").href;
+    document.getElementById("passwordPrompt").style.display = "block";
+    document.getElementById("editorForm").style.display = "none";
+  }
+}
 
+function checkPassword() {
+  const password = document.getElementById("adminPassword").value;
+  if (password === ADMIN_PASSWORD) {
+    document.getElementById("passwordPrompt").style.display = "none";
+    document.getElementById("editorForm").style.display = "block";
+  } else {
+    alert("❌ Wrong password!");
+    document.getElementById("adminPassword").value = "";
+  }
+}
+
+function saveChanges() {
+  const title = document.getElementById("editTitle").value;
+  const desc = document.getElementById("editDesc").value;
+  const link = document.getElementById("editLink").value;
+
+  if (!title || !desc || !link) {
+    alert("⚠️ Please fill in all fields");
+    return;
+  }
+
+  // Save to browser storage
+  const data = { title, desc, link };
+  localStorage.setItem("scyfarmsData", JSON.stringify(data));
+
+  // Update display
+  document.getElementById("displayTitle").textContent = title;
+  document.getElementById("displayDesc").textContent = desc;
+  document.getElementById("docLink").href = link;
+
+  closeEditor();
+  alert("✅ Changes saved!");
+}
+
+function closeEditor() {
+  document.getElementById("editView").classList.remove("show");
+  document.getElementById("adminPassword").value = "";
+}
+
+// Load any saved data on page load
+loadSavedData();
+</script>
 
 </body>
 </html>
