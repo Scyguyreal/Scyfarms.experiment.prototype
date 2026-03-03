@@ -186,7 +186,7 @@
   <div id="publicView">
     <div class="hero">
       <h1 id="displayTitle">Welcome to Scyfarms</h1>
-      <p id="displayDesc">This site serves as a landing page for our project. Click the link below to open the shared document with all details.</p>
+      <p id="displayDesc">This site serves as a landing page for our home page. Click the link below to open the shared document with all details.</p>
       <a id="docLink" href="https://docs.google.com/document/d/12Di0ZwywaxrZLS9AEb8XVBfyN6aL4qJe15HEdYB2-ao/edit?tab=t.0" target="_blank" class="btn-primary">Open Google Doc</a>
     </div>
 
@@ -255,9 +255,10 @@
       <h2 style="margin-bottom: 20px; color: #333;">⚙️ Admin Panel</h2>
 
       <!-- Pending Approvals Tab -->
-      <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 15px;">
+      <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 15px; flex-wrap: wrap;">
         <button onclick="showApprovals()" id="approvalsBtn" style="background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">📋 Pending Approvals</button>
         <button onclick="showEditLive()" id="editLiveBtn" style="background: #ddd; color: #333; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">✏️ Edit Live Content</button>
+        <button onclick="showChangePassword()" id="changePassBtn" style="background: #ddd; color: #333; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">🔑 Change Password</button>
         <button onclick="logout()" style="background: #e74c3c; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; margin-left: auto;">Logout</button>
       </div>
 
@@ -286,6 +287,28 @@
 
         <div class="btn-group">
           <button class="btn-save" onclick="saveAdminChanges()">Save Changes</button>
+        </div>
+      </div>
+
+      <!-- Change Password Section -->
+      <div id="changePassSection" style="display: none;">
+        <div class="form-group">
+          <label>Current Password:</label>
+          <input type="password" id="currentPass" placeholder="Enter current password" />
+        </div>
+
+        <div class="form-group">
+          <label>New Password:</label>
+          <input type="password" id="newPass" placeholder="Enter new password" />
+        </div>
+
+        <div class="form-group">
+          <label>Confirm New Password:</label>
+          <input type="password" id="confirmPass" placeholder="Confirm new password" />
+        </div>
+
+        <div class="btn-group">
+          <button class="btn-save" onclick="updatePassword()">Update Password</button>
         </div>
       </div>
     </div>
@@ -374,7 +397,8 @@ function adminLogin() {
 // Check admin password
 function checkAdminPassword() {
   const password = document.getElementById("adminPassword").value;
-  if (password === ADMIN_PASSWORD) {
+  const correctPassword = getAdminPassword();
+  if (password === correctPassword) {
     document.getElementById("adminLoginView").classList.remove("show");
     document.getElementById("adminPanel").classList.add("show");
     showApprovals();
@@ -388,8 +412,10 @@ function checkAdminPassword() {
 function showApprovals() {
   document.getElementById("approvalsSection").style.display = "block";
   document.getElementById("editLiveSection").style.display = "none";
+  document.getElementById("changePassSection").style.display = "none";
   document.getElementById("approvalsBtn").style.background = "#667eea";
   document.getElementById("editLiveBtn").style.background = "#ddd";
+  document.getElementById("changePassBtn").style.background = "#ddd";
   
   const suggestions = getPendingSuggestions();
   const pendingList = document.getElementById("pendingList");
@@ -451,8 +477,10 @@ function rejectSuggestion(id) {
 function showEditLive() {
   document.getElementById("approvalsSection").style.display = "none";
   document.getElementById("editLiveSection").style.display = "block";
+  document.getElementById("changePassSection").style.display = "none";
   document.getElementById("approvalsBtn").style.background = "#ddd";
   document.getElementById("editLiveBtn").style.background = "#667eea";
+  document.getElementById("changePassBtn").style.background = "#ddd";
   
   const content = loadContent();
   document.getElementById("editTitle").value = content.title;
@@ -492,6 +520,75 @@ function closeAdminLogin() {
 }
 
 // Load on page start
+// Initialize admin password from localStorage if not set
+function initAdminPassword() {
+  if (!localStorage.getItem("scyfarmsAdminPassword")) {
+    localStorage.setItem("scyfarmsAdminPassword", "admin123");
+  }
+}
+
+// Get current admin password
+function getAdminPassword() {
+  return localStorage.getItem("scyfarmsAdminPassword") || "admin123";
+}
+
+// Save new admin password
+function saveAdminPassword(newPass) {
+  localStorage.setItem("scyfarmsAdminPassword", newPass);
+}
+
+// Show change password section
+function showChangePassword() {
+  document.getElementById("approvalsSection").style.display = "none";
+  document.getElementById("editLiveSection").style.display = "none";
+  document.getElementById("changePassSection").style.display = "block";
+  document.getElementById("approvalsBtn").style.background = "#ddd";
+  document.getElementById("editLiveBtn").style.background = "#ddd";
+  document.getElementById("changePassBtn").style.background = "#667eea";
+  
+  // Clear form
+  document.getElementById("currentPass").value = "";
+  document.getElementById("newPass").value = "";
+  document.getElementById("confirmPass").value = "";
+}
+
+// Update password
+function updatePassword() {
+  const currentPass = document.getElementById("currentPass").value;
+  const newPass = document.getElementById("newPass").value;
+  const confirmPass = document.getElementById("confirmPass").value;
+
+  if (!currentPass || !newPass || !confirmPass) {
+    alert("⚠️ Please fill in all fields");
+    return;
+  }
+
+  const actualPassword = getAdminPassword();
+  if (currentPass !== actualPassword) {
+    alert("❌ Current password is incorrect");
+    return;
+  }
+
+  if (newPass !== confirmPass) {
+    alert("⚠️ New passwords don't match");
+    return;
+  }
+
+  if (newPass.length < 4) {
+    alert("⚠️ Password must be at least 4 characters");
+    return;
+  }
+
+  saveAdminPassword(newPass);
+  alert("✅ Password updated successfully!");
+  
+  // Clear form
+  document.getElementById("currentPass").value = "";
+  document.getElementById("newPass").value = "";
+  document.getElementById("confirmPass").value = "";
+}
+
+initAdminPassword();
 loadContent();
 </script>
 
