@@ -183,34 +183,92 @@
 
 <div class="container">
   <!-- Public View -->
-  <div id="publicView" class="show">
+  <div id="publicView">
     <div class="hero">
       <h1 id="displayTitle">Welcome to Scyfarms</h1>
       <p id="displayDesc">This site serves as a landing page for our project. Click the link below to open the shared document with all details.</p>
-      <a id="docLink" href="https://docs.google.com" target="_blank" class="btn-primary">Open Google Doc</a>
+      <a id="docLink" href="https://docs.google.com/document/d/12Di0ZwywaxrZLS9AEb8XVBfyN6aL4qJe15HEdYB2-ao/edit?tab=t.0" target="_blank" class="btn-primary">Open Google Doc</a>
     </div>
 
     <div class="content">
       <p class="footer-text">You may be coming from a Google Site; feel free to bookmark this page or return to it anytime.</p>
-      <button class="btn-edit" onclick="toggleEdit()">🔧 Edit (Admin Only)</button>
+      <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button class="btn-edit" onclick="adminLogin()" style="flex: 1;">🔐 Admin View</button>
+        <button class="btn-edit" onclick="toggleSuggestEdit()" style="flex: 1; background: #48bb78;">💡 Suggest Edit</button>
+      </div>
     </div>
   </div>
 
-  <!-- Editor View (Password Protected) -->
-  <div id="editView" class="edit-section">
+  <!-- Suggest Edit Form (visible to everyone) -->
+  <div id="suggestEditView" class="edit-section">
     <div class="content">
-      <h2 style="margin-bottom: 20px; color: #333;">🔐 Admin Editor</h2>
+      <h2 style="margin-bottom: 20px; color: #333;">💡 Suggest a Change</h2>
+      <p style="color: #666; margin-bottom: 20px;">Submit your suggested changes below. The admin will review and approve them.</p>
       
-      <div id="passwordPrompt">
-        <div class="form-group">
-          <label>Enter Password:</label>
-          <input type="password" id="adminPassword" placeholder="Enter admin password" />
-        </div>
-        <button class="btn-save" onclick="checkPassword()" style="width: 100%;">Unlock</button>
-        <button class="btn-cancel" onclick="toggleEdit()" style="width: 100%; margin-top: 10px;">Cancel</button>
+      <div class="form-group">
+        <label>Suggested Title:</label>
+        <input type="text" id="suggestTitle" placeholder="Leave blank to keep current" />
       </div>
 
-      <div id="editorForm" style="display: none;">
+      <div class="form-group">
+        <label>Suggested Description:</label>
+        <textarea id="suggestDesc" placeholder="Leave blank to keep current"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Suggested Google Doc Link:</label>
+        <input type="text" id="suggestLink" placeholder="Leave blank to keep current" />
+      </div>
+
+      <div class="form-group">
+        <label>Your Name (optional):</label>
+        <input type="text" id="suggestName" placeholder="Who are you?" />
+      </div>
+
+      <div class="btn-group">
+        <button class="btn-save" onclick="submitSuggestion()">Submit Suggestion</button>
+        <button class="btn-cancel" onclick="toggleSuggestEdit()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Login -->
+  <div id="adminLoginView" class="edit-section">
+    <div class="content">
+      <h2 style="margin-bottom: 20px; color: #333;">🔐 Admin Login</h2>
+      
+      <div class="form-group">
+        <label>Enter Admin Password:</label>
+        <input type="password" id="adminPassword" placeholder="Enter password" />
+      </div>
+
+      <div class="btn-group">
+        <button class="btn-save" onclick="checkAdminPassword()" style="flex: 1;">Login</button>
+        <button class="btn-cancel" onclick="closeAdminLogin()" style="flex: 1;">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Panel -->
+  <div id="adminPanel" class="edit-section">
+    <div class="content">
+      <h2 style="margin-bottom: 20px; color: #333;">⚙️ Admin Panel</h2>
+
+      <!-- Pending Approvals Tab -->
+      <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 15px;">
+        <button onclick="showApprovals()" id="approvalsBtn" style="background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">📋 Pending Approvals</button>
+        <button onclick="showEditLive()" id="editLiveBtn" style="background: #ddd; color: #333; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">✏️ Edit Live Content</button>
+        <button onclick="logout()" style="background: #e74c3c; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; margin-left: auto;">Logout</button>
+      </div>
+
+      <!-- Approvals Section -->
+      <div id="approvalsSection">
+        <div id="pendingList" style="max-height: 400px; overflow-y: auto;"></div>
+        <p id="noPending" style="text-align: center; color: #999; padding: 20px;">No pending suggestions</p>
+      </div>
+
+      <!-- Edit Live Section -->
+      <div id="editLiveSection" style="display: none;">
         <div class="form-group">
           <label>Page Title:</label>
           <input type="text" id="editTitle" placeholder="Enter page title" />
@@ -227,8 +285,7 @@
         </div>
 
         <div class="btn-group">
-          <button class="btn-save" onclick="saveChanges()">Save Changes</button>
-          <button class="btn-cancel" onclick="closeEditor()">Cancel</button>
+          <button class="btn-save" onclick="saveAdminChanges()">Save Changes</button>
         </div>
       </div>
     </div>
@@ -236,46 +293,175 @@
 </div>
 
 <script>
-// Simple password (change this to something secure)
 const ADMIN_PASSWORD = "admin123";
 
-// Load saved data from browser storage
-function loadSavedData() {
-  const saved = localStorage.getItem("scyfarmsData");
-  if (saved) {
-    const data = JSON.parse(saved);
-    document.getElementById("displayTitle").textContent = data.title;
-    document.getElementById("displayDesc").textContent = data.desc;
-    document.getElementById("docLink").href = data.link;
-  }
-}
-
-function toggleEdit() {
-  const editView = document.getElementById("editView");
-  editView.classList.toggle("show");
+// Load content from localStorage
+function loadContent() {
+  const content = JSON.parse(localStorage.getItem("scyfarmsContent")) || {
+    title: "Welcome to Scyfarms",
+    desc: "This site serves as a landing page for our project. Click the link below to open the shared document with all details.",
+    link: "https://docs.google.com"
+  };
   
-  if (editView.classList.contains("show")) {
-    // Load current values into form
-    document.getElementById("editTitle").value = document.getElementById("displayTitle").textContent;
-    document.getElementById("editDesc").value = document.getElementById("displayDesc").textContent;
-    document.getElementById("editLink").value = document.getElementById("docLink").href;
-    document.getElementById("passwordPrompt").style.display = "block";
-    document.getElementById("editorForm").style.display = "none";
-  }
+  document.getElementById("displayTitle").textContent = content.title;
+  document.getElementById("displayDesc").textContent = content.desc;
+  document.getElementById("docLink").href = content.link;
+  
+  return content;
 }
 
-function checkPassword() {
+// Get all pending suggestions
+function getPendingSuggestions() {
+  return JSON.parse(localStorage.getItem("scyfarmsPending")) || [];
+}
+
+// Save pending suggestions
+function savePendingSuggestions(suggestions) {
+  localStorage.setItem("scyfarmsPending", JSON.stringify(suggestions));
+}
+
+// Toggle suggest edit view
+function toggleSuggestEdit() {
+  const view = document.getElementById("suggestEditView");
+  view.classList.toggle("show");
+  document.getElementById("publicView").style.display = view.classList.contains("show") ? "none" : "block";
+}
+
+// Submit a suggestion
+function submitSuggestion() {
+  const title = document.getElementById("suggestTitle").value;
+  const desc = document.getElementById("suggestDesc").value;
+  const link = document.getElementById("suggestLink").value;
+  const name = document.getElementById("suggestName").value || "Anonymous";
+
+  if (!title && !desc && !link) {
+    alert("⚠️ Please suggest at least one change");
+    return;
+  }
+
+  const current = loadContent();
+  const suggestion = {
+    id: Date.now(),
+    title: title || current.title,
+    desc: desc || current.desc,
+    link: link || current.link,
+    submittedBy: name,
+    submittedAt: new Date().toLocaleString(),
+    status: "pending"
+  };
+
+  const suggestions = getPendingSuggestions();
+  suggestions.push(suggestion);
+  savePendingSuggestions(suggestions);
+
+  alert("✅ Suggestion submitted! Admin will review it soon.");
+  toggleSuggestEdit();
+  
+  // Clear form
+  document.getElementById("suggestTitle").value = "";
+  document.getElementById("suggestDesc").value = "";
+  document.getElementById("suggestLink").value = "";
+  document.getElementById("suggestName").value = "";
+}
+
+// Admin login
+function adminLogin() {
+  document.getElementById("publicView").style.display = "none";
+  document.getElementById("suggestEditView").classList.remove("show");
+  document.getElementById("adminLoginView").classList.add("show");
+}
+
+// Check admin password
+function checkAdminPassword() {
   const password = document.getElementById("adminPassword").value;
   if (password === ADMIN_PASSWORD) {
-    document.getElementById("passwordPrompt").style.display = "none";
-    document.getElementById("editorForm").style.display = "block";
+    document.getElementById("adminLoginView").classList.remove("show");
+    document.getElementById("adminPanel").classList.add("show");
+    showApprovals();
   } else {
     alert("❌ Wrong password!");
     document.getElementById("adminPassword").value = "";
   }
 }
 
-function saveChanges() {
+// Show pending approvals
+function showApprovals() {
+  document.getElementById("approvalsSection").style.display = "block";
+  document.getElementById("editLiveSection").style.display = "none";
+  document.getElementById("approvalsBtn").style.background = "#667eea";
+  document.getElementById("editLiveBtn").style.background = "#ddd";
+  
+  const suggestions = getPendingSuggestions();
+  const pendingList = document.getElementById("pendingList");
+  const noPending = document.getElementById("noPending");
+
+  if (suggestions.length === 0) {
+    pendingList.innerHTML = "";
+    noPending.style.display = "block";
+    return;
+  }
+
+  noPending.style.display = "none";
+  pendingList.innerHTML = suggestions.map(s => `
+    <div style="background: white; border: 2px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+      <p style="font-size: 0.85em; color: #999; margin-bottom: 10px;">Submitted by <strong>${s.submittedBy}</strong> at ${s.submittedAt}</p>
+      <p style="margin: 8px 0;"><strong>Proposed Title:</strong> ${s.title}</p>
+      <p style="margin: 8px 0;"><strong>Proposed Description:</strong> ${s.desc}</p>
+      <p style="margin: 8px 0;"><strong>Proposed Link:</strong> <a href="${s.link}" target="_blank" style="color: #667eea;">${s.link}</a></p>
+      <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button onclick="approveSuggestion(${s.id})" style="flex: 1; background: #48bb78; color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: 600;">✅ Approve</button>
+        <button onclick="rejectSuggestion(${s.id})" style="flex: 1; background: #e74c3c; color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: 600;">❌ Reject</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+// Approve a suggestion
+function approveSuggestion(id) {
+  const suggestions = getPendingSuggestions();
+  const suggestion = suggestions.find(s => s.id === id);
+  
+  if (suggestion) {
+    // Save as live content
+    localStorage.setItem("scyfarmsContent", JSON.stringify({
+      title: suggestion.title,
+      desc: suggestion.desc,
+      link: suggestion.link
+    }));
+    
+    // Remove from pending
+    savePendingSuggestions(suggestions.filter(s => s.id !== id));
+    
+    // Reload display
+    loadContent();
+    showApprovals();
+    alert("✅ Suggestion approved and published!");
+  }
+}
+
+// Reject a suggestion
+function rejectSuggestion(id) {
+  const suggestions = getPendingSuggestions();
+  savePendingSuggestions(suggestions.filter(s => s.id !== id));
+  showApprovals();
+  alert("❌ Suggestion rejected");
+}
+
+// Show edit live section
+function showEditLive() {
+  document.getElementById("approvalsSection").style.display = "none";
+  document.getElementById("editLiveSection").style.display = "block";
+  document.getElementById("approvalsBtn").style.background = "#ddd";
+  document.getElementById("editLiveBtn").style.background = "#667eea";
+  
+  const content = loadContent();
+  document.getElementById("editTitle").value = content.title;
+  document.getElementById("editDesc").value = content.desc;
+  document.getElementById("editLink").value = content.link;
+}
+
+// Save admin changes directly
+function saveAdminChanges() {
   const title = document.getElementById("editTitle").value;
   const desc = document.getElementById("editDesc").value;
   const link = document.getElementById("editLink").value;
@@ -285,26 +471,28 @@ function saveChanges() {
     return;
   }
 
-  // Save to browser storage
-  const data = { title, desc, link };
-  localStorage.setItem("scyfarmsData", JSON.stringify(data));
-
-  // Update display
-  document.getElementById("displayTitle").textContent = title;
-  document.getElementById("displayDesc").textContent = desc;
-  document.getElementById("docLink").href = link;
-
-  closeEditor();
-  alert("✅ Changes saved!");
+  localStorage.setItem("scyfarmsContent", JSON.stringify({ title, desc, link }));
+  loadContent();
+  alert("✅ Changes saved and published!");
 }
 
-function closeEditor() {
-  document.getElementById("editView").classList.remove("show");
+// Logout
+function logout() {
+  document.getElementById("adminPanel").classList.remove("show");
+  document.getElementById("adminLoginView").classList.remove("show");
+  document.getElementById("publicView").style.display = "block";
   document.getElementById("adminPassword").value = "";
 }
 
-// Load any saved data on page load
-loadSavedData();
+// Close admin login
+function closeAdminLogin() {
+  document.getElementById("adminLoginView").classList.remove("show");
+  document.getElementById("publicView").style.display = "block";
+  document.getElementById("adminPassword").value = "";
+}
+
+// Load on page start
+loadContent();
 </script>
 
 </body>
