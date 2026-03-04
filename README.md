@@ -1,4 +1,4 @@
-# Scyfarms Prototype
+# Scyfarms Main
 
 This repository contains a simple single-page social app called **Weave** built
 using HTML, Tailwind CSS, and Parse (back4app) as a backend.
